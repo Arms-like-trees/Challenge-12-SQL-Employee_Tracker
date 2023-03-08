@@ -2,7 +2,7 @@ const mysql = require('mysql2');
 const inquirer = require('inquirer');
 require('dotenv').config();
 //const express = require('express');
-
+const figlet = require('figlet')
 //const PORT = process.env.PORT || 3001;
 //const app = express();
 
@@ -12,80 +12,95 @@ const db = mysql.createConnection({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME
-  });
-  db.connect(function(err){
-      console.log(err)
-  });
- 
-  
+});
+db.connect(function (err) {
+    console.log(err)
+});
+
+
 
 //const cTable = require('console.table');
 
-function start () {
+
+// The header image once intialized
+function init() {
+    figlet('Empl. Database', async function (err, data) {
+        if (err) {
+            console.log('Error making header', err);
+        } else {
+            console.log(data)
+            start()
+        }
+    })
+};
+
+function start() {
     inquirer.prompt([
-    //Main Menu
-    {
-        name: 'mainMenu',
-        type: 'list',
-        message: 'What would you like to do?',
-        choices: [
-            'View all departments',
-            'View all Roles',
-            'View all employees',
-            'Add a department',
-            'Add a role',
-            'Add an employee',
-            'Update employee role',
-            'Delete employee',
-            'Quit'
-        ]
-    }
-])
-.then((answers) => {
-    
-    // depending on user selection determines which case is used
-    switch (answers.mainMenu) {
+        //Main Menu
+        {
+            name: 'mainMenu',
+            type: 'list',
+            message: 'What would you like to do?',
+            choices: [
+                'View all departments',
+                'View all Roles',
+                'View all employees',
+                'Add a department',
+                'Add a role',
+                'Add an employee',
+                'Update employee role',
+                'Delete employee',
+                'Quit'
+            ]
+        }
+    ])
+        .then((answers) => {
 
-        case 'View all departments':
-                viewDepartments();
-            break;
+            // depending on user selection determines which case is used
+            switch (answers.mainMenu) {
 
-        case 'View all Roles':
-            viewRoles();
-            break;
+                case 'View all departments':
+                    viewDepartments();
+                    break;
 
-        case 'View all employees':
-            viewEmployees();
-            break;
+                case 'View all Roles':
+                    viewRoles();
+                    break;
 
-        case 'Add a department':
-            addDepartment();
-            break;
+                case 'View all employees':
+                    viewEmployees();
+                    break;
 
-        case 'Add a role':
-            break;
+                case 'Add a department':
+                    addDepartment();
+                    break;
 
-        case 'Add an employee':
-            break;
+                case 'Add a role':
+                    addRole();
+                    break;
 
-        case 'Update employee role':
-            break;
+                case 'Add an employee':
+                    break;
 
-        case 'Delete employee':
-            break;
+                case 'Update employee role':
+                    break;
 
-        case 'Quit':
-            break
-    }
-})
-// take the choice
-// to select other function to make dateabase quereis
-// then console.table()
+                case 'Delete employee':
+                    break;
+
+                case 'Quit':
+                    process.exit();
+                    break
+            }
+        })
+    // take the choice
+    // to select other function to make dateabase quereis
+    // then console.table()
 }
 
 
 
-start();
+init();
 
 
 
@@ -95,7 +110,7 @@ start();
 
 // View All departments
 
-function viewDepartments(){
+function viewDepartments() {
     db.query('SELECT * FROM departments', (err, data) => {
         if (err) {
             console.error(err);
@@ -108,7 +123,7 @@ function viewDepartments(){
 
 // View all Roles
 
-function viewRoles(){
+function viewRoles() {
     db.query('SELECT * FROM roles', (err, data) => {
         if (err) {
             console.error(err);
@@ -121,7 +136,7 @@ function viewRoles(){
 
 // View Employees
 
-function viewEmployees(){
+function viewEmployees() {
     db.query('SELECT * FROM employees', (err, data) => {
         if (err) {
             console.error(err);
@@ -137,14 +152,14 @@ function viewEmployees(){
 function addDepartment() {
     inquirer.prompt([
         {
-            name:'departmentName',
+            name: 'departmentName',
             type: 'input',
             message: 'What is the name of the department?'
         }
     ]
     ).then((addDept) => {
-        db.query(`INSERT INTO departments(department_names) VALUES ('${addDept.departmentName}')`, function(err, results){
-            if(err){
+        db.query(`INSERT INTO departments(department_names) VALUES ('${addDept.departmentName}')`, function (err, results) {
+            if (err) {
                 console.error(err)
             } else {
                 console.table(results);
@@ -152,30 +167,60 @@ function addDepartment() {
             }
         })
         start();
-    })    
+    })
 };
 
-/*
 
-ADD Role
 
-funciton addRole(){
-    inquirer.prompt([
-        {
-            name: 'roleName',
-            type: 'input'
-            message: 'What is the name of the new role?'
-        },
-        {
-            name: 'roleSalary',
-            type: 'input'.
-            message: 'What is the salaray of the new role?'
-        },
-        {
-            name: 'roleDepartment',
-            type:
+//ADD Role
+
+function addRole() {
+
+    // To create the array of choices from current department list
+    let departmentsList = [];
+    db.query(`SELECT * FROM departments`,
+        function (err, results) {
+            if (err) {
+                console.error(err)
+            } else {
+                for (let i in results)
+                    departmentsList.push({
+                        name: results[i].department_names,
+                        value: results[i].id,
+                    });
+
+
+                    //start of the question related to adding new role
+                inquirer.prompt([
+                    {
+                        name: 'roleName',
+                        type: 'input',
+                        message: 'What is the name of the new role?'
+                    },
+                    {
+                        name: 'roleSalary',
+                        type: 'number',
+                        message: 'What is the salaray of the new role?'
+                    },
+                    {
+                        name: 'roleDepartment',
+                        type: 'list',
+                        message: 'What department does this role need to be added to?',
+                        choices: departmentsList
+                    }
+                ])
+                    .then((response) => {
+                        db.query(`INSERT INTO roles(role_title, role_salary, department_id) VALUES ('${response.roleName}', '${response.roleSalary}', '${response.roleDepartment}')`,
+                        function(err, results){
+                            if(err){
+                                console.error(err)
+                            } else {
+                                console.table(results);
+                                console.log(`${response.roleName} was added`)
+                            }
+                        })
+                    })
+            }
         }
-    ])
-}
-
-*/
+    )
+};

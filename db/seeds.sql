@@ -24,5 +24,3 @@ VALUES ('Jon', 'Smith', 1, NULL),
 ('Little', 'Sout', 8, 4),
 ('Big', 'Wusy', 5, NULL),
 ('Chris', 'Mcfly', 6, 7);
-
--- first name, lastname, role id, manager id
