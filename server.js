@@ -1,5 +1,6 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
+require('dotenv').config();
 //const express = require('express');
 
 //const PORT = process.env.PORT || 3001;
@@ -12,7 +13,7 @@ const db = mysql.createConnection({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME
   });
-  connection.connect(function(err){
+  db.connect(function(err){
       console.log(err)
   });
  
@@ -21,11 +22,10 @@ const db = mysql.createConnection({
 //const cTable = require('console.table');
 
 function start () {
-    inquirer
-    .prompt([
+    inquirer.prompt([
     //Main Menu
     {
-        name:mainMenu,
+        name: 'mainMenu',
         type: 'list',
         message: 'What would you like to do?',
         choices: [
@@ -47,39 +47,19 @@ function start () {
     switch (answers.mainMenu) {
 
         case 'View all departments':
-            db.query('SELECT * FROM departments', (err, data) => {
-                if (err) {
-                    console.error(err);
-                } else {
-                    console.table(data);
-                    start();
-                }
-            })
+                viewDepartments();
             break;
 
         case 'View all Roles':
-            db.query('SELECT * FROM roles', (err, data) => {
-                if (err) {
-                    console.error(err);
-                } else {
-                    console.table(data);
-                    start();
-                }
-            })
+            viewRoles();
             break;
 
         case 'View all employees':
-            db.query('SELECT * FROM employees', (err, data) => {
-                if (err) {
-                    console.error(err);
-                } else {
-                    console.table(data);
-                    start();
-                }
-            })
+            viewEmployees();
             break;
 
         case 'Add a department':
+            addDepartment();
             break;
 
         case 'Add a role':
@@ -106,3 +86,96 @@ function start () {
 
 
 start();
+
+
+
+
+
+// what will be other question needto add for the other selections
+
+// View All departments
+
+function viewDepartments(){
+    db.query('SELECT * FROM departments', (err, data) => {
+        if (err) {
+            console.error(err);
+        } else {
+            console.table(data);
+            start();
+        }
+    })
+};;
+
+// View all Roles
+
+function viewRoles(){
+    db.query('SELECT * FROM roles', (err, data) => {
+        if (err) {
+            console.error(err);
+        } else {
+            console.table(data);
+            start();
+        }
+    })
+};
+
+// View Employees
+
+function viewEmployees(){
+    db.query('SELECT * FROM employees', (err, data) => {
+        if (err) {
+            console.error(err);
+        } else {
+            console.table(data);
+            start();
+        }
+    })
+};
+
+// ADD department
+
+function addDepartment() {
+    inquirer.prompt([
+        {
+            name:'departmentName',
+            type: 'input',
+            message: 'What is the name of the department?'
+        }
+    ]
+    ).then((addDept) => {
+        db.query(`INSERT INTO departments(department_names) VALUES ('${addDept.departmentName}')`, function(err, results){
+            if(err){
+                console.error(err)
+            } else {
+                console.table(results);
+                console.log(`${addDept.departmentName} was successsfully added to the database.`)
+            }
+        })
+        start();
+    })    
+};
+
+/*
+
+ADD Role
+
+funciton addRole(){
+    inquirer.prompt([
+        {
+            name: 'roleName',
+            type: 'input'
+            message: 'What is the name of the new role?'
+        },
+        {
+            name: 'roleSalary',
+            type: 'input'.
+            message: 'What is the salaray of the new role?'
+        },
+        {
+            name: 'roleDepartment',
+            type:
+        }
+    ])
+}
+
+*/
