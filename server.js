@@ -236,6 +236,7 @@ function addRole() {
 function addEmployee(){
 
     // for the selection of what role they are to have and who there manager is
+    // Null is needed for if you happpen to be adding a manager
     const managersList = ['NULL'];
     const rolesList =[];
 
@@ -304,4 +305,55 @@ function addEmployee(){
             })
         }
     })
+};
+
+
+/*
+// For updating an employee
+
+function updateEmployee() {
+    let employeesLists = [];
+    let rolesLists = [];
+    let managersList = [];
+
+    db.query(`SELECT * FROM employees`, function (err, results) {
+        if (err) {
+            console.error(err);
+        } else {
+            for (let i in results)
+            employeesLists.push({
+                name: `${results[i].first_names} ${results[i].last_names}`,
+                value: results[i].employee_id
+            })
+            console.log(employeesLists);
+            db.query(`SELECT role_id, role_title FROM roles`, function (err, results) {
+                if (err) {
+                    console.log('from role array list');
+                    console.error(err);
+                } else {
+                    for (let i in results) {
+                        rolesList.push({
+                            name:results[i].role_title,
+                            value: results[i].role_id
+                        })
+                        inquirer.prompt([
+                            {
+                                type: 'list',
+                                name: 'employee',
+                                message: 'Who would you like to update?',
+                                choices: employeesLists
+                            },
+                            {
+                                type: 'list',
+                                name: 'jobTitle',
+                                message: 'What is their new job classification?',
+                                choices: rolesLists
+                            }
+                        ])
+                        .then((response) => {
+                            db.query(`UPDATE employees SET role`)
+                        })
+            })
+            )
 }
+*/
