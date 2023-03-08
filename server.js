@@ -2,7 +2,8 @@ const mysql = require('mysql2');
 const inquirer = require('inquirer');
 require('dotenv').config();
 //const express = require('express');
-const figlet = require('figlet')
+const figlet = require('figlet');
+const { response } = require('express');
 //const PORT = process.env.PORT || 3001;
 //const app = express();
 
@@ -80,6 +81,7 @@ function start() {
                     break;
 
                 case 'Add an employee':
+                    addEmployee();
                     break;
 
                 case 'Update employee role':
@@ -164,9 +166,10 @@ function addDepartment() {
             } else {
                 console.table(results);
                 console.log(`${addDept.departmentName} was successsfully added to the database.`)
+                start();
             }
         })
-        start();
+        
     })
 };
 
@@ -186,7 +189,7 @@ function addRole() {
                 for (let i in results)
                     departmentsList.push({
                         name: results[i].department_names,
-                        value: results[i].id,
+                        value: results[i].department_id,
                     });
 
 
@@ -217,10 +220,88 @@ function addRole() {
                             } else {
                                 console.table(results);
                                 console.log(`${response.roleName} was added`)
+                                start();
                             }
                         })
+                        
                     })
             }
         }
     )
 };
+
+
+//  Add employee
+
+function addEmployee(){
+
+    // for the selection of what role they are to have and who there manager is
+    const managersList = ['NULL'];
+    const rolesList =[];
+
+    db.query(`SELECT * FROM employees`, function (err, results) {
+        if (err) {
+            console.log('from manager array list');
+            console.error(err);
+        } else {
+            for (const result of results) {
+                managersList.push({
+                    name: `${result.first_names} ${result.last_names}`,
+                    value: result.employee_id
+                });
+                
+                console.log(managersList);
+            }
+
+            db.query(`SELECT role_id, role_title FROM roles`, function (err, results) {
+                if (err) {
+                    console.log('from role array list');
+                    console.error(err);
+                } else {
+                    for (const result of results) {
+                        rolesList.push({
+                            name:result.role_title,
+                            value: result.role_id
+                        });
+                    }
+                    inquirer.prompt([
+                        {
+                            type: 'input',
+                            name:'first_name',
+                            message: 'What is the employee\'s first name?'
+                        },
+                        {
+                            type: 'input',
+                            name: 'last_name',
+                            message: 'What is the employee\'s last name?'
+                        },
+                        {
+                            type: 'list',
+                            name: 'jobTitle',
+                            message: 'What is the employee\'s job?',
+                            choices: rolesList
+                        },
+                        {
+                            type: "list",
+                            name: 'manager',
+                            message: 'Who is the employee\'s manager?',
+                            choices: managersList
+                        }
+                    ])
+                    .then((response) => {
+                        db.query(`INSERT INTO employees(first_names, last_names, role_id, manager_id) VALUES ('${response.first_name}', '${response.last_name}', '${response.jobTitle}', '${response.manager}')`, 
+                        function (err, results) {
+                            if (err) {
+                                console.error(err);
+                                console.log('Employee not added');
+                            } else {console.table(results);
+                                console.log(`${response.first_name} ${response.last_name} was added.`);
+                                start();
+                        }
+                        })
+                    })
+                }
+            })
+        }
+    })
+}
