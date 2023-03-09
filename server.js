@@ -89,6 +89,7 @@ function start() {
                     break;
 
                 case 'Delete employee':
+                    deleteEmployee();
                     break;
 
                 case 'Quit':
@@ -240,7 +241,7 @@ function addRole() {
 function addEmployee() {
 
     // for the selection of what role they are to have and who there manager is
-    // Null is needed for if you happpen to be adding a manager
+    // What could I do to add NULL as an option for if I am hiring a manager?
     const managersList = [];
     const rolesList = [];
 
@@ -319,7 +320,7 @@ console.log(managersList);
 function updateEmployee() {
     let employeesLists = [];
     let rolesLists = [];
-    let managersList = [];
+    //make option to update manager later
 
     db.query(`SELECT * FROM employees`, function (err, results) {
         if (err) {
@@ -370,4 +371,40 @@ function updateEmployee() {
                 )
         }
     })
+}
+
+function deleteEmployee() {
+    let employeesLists = [];
+
+    db.query(`SELECT * FROM employees`, function (err, results) {
+        if (err) {
+            console.error(err);
+        } else {
+            for (let i in results)
+            employeesLists.push({
+                name: `${results[i].first_names} ${results[i].last_names}`,
+                    value: results[i].employee_id
+            })
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'employee',
+                    message: 'Who would you like to terminate?',
+                    choices: employeesLists
+                }
+            ])
+            .then((response) => {
+                db.query(`DELETE FROM employees WHERE employee_id=${response.employee}`, function (err, results) {
+                    if (err) {
+                        console.error(err)
+                    } else {
+                        console.log(`${(employeesLists[response.employee - 1].name)} has been terminated`);
+                        start();
+                    }
+                })
+            })
+        }
+    }
+        
+    )
 }
