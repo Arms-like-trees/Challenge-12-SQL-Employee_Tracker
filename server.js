@@ -20,7 +20,7 @@ db.connect(function (err) {
 
 
 
-//const cTable = require('console.table');
+const cTable = require('console.table');
 
 
 // The header image once intialized
@@ -85,6 +85,7 @@ function start() {
                     break;
 
                 case 'Update employee role':
+                    updateEmployee();
                     break;
 
                 case 'Delete employee':
@@ -126,7 +127,8 @@ function viewDepartments() {
 // View all Roles
 
 function viewRoles() {
-    db.query('SELECT * FROM roles', (err, data) => {
+    db.query(`SELECT * FROM roles 
+    JOIN departments ON roles.department_id = departments.department_id`, (err, data) => {
         if (err) {
             console.error(err);
         } else {
@@ -139,7 +141,9 @@ function viewRoles() {
 // View Employees
 
 function viewEmployees() {
-    db.query('SELECT * FROM employees', (err, data) => {
+    db.query(`SELECT * FROM employees
+    JOIN roles ON employees.role_id = roles.role_id
+    JOIN departments ON roles.department_id = departments.department_id`, (err, data) => {
         if (err) {
             console.error(err);
         } else {
@@ -169,7 +173,7 @@ function addDepartment() {
                 start();
             }
         })
-        
+
     })
 };
 
@@ -193,7 +197,7 @@ function addRole() {
                     });
 
 
-                    //start of the question related to adding new role
+                //start of the question related to adding new role
                 inquirer.prompt([
                     {
                         name: 'roleName',
@@ -214,16 +218,16 @@ function addRole() {
                 ])
                     .then((response) => {
                         db.query(`INSERT INTO roles(role_title, role_salary, department_id) VALUES ('${response.roleName}', '${response.roleSalary}', '${response.roleDepartment}')`,
-                        function(err, results){
-                            if(err){
-                                console.error(err)
-                            } else {
-                                console.table(results);
-                                console.log(`${response.roleName} was added`)
-                                start();
-                            }
-                        })
-                        
+                            function (err, results) {
+                                if (err) {
+                                    console.error(err)
+                                } else {
+                                    console.table(results);
+                                    console.log(`${response.roleName} was added`)
+                                    start();
+                                }
+                            })
+
                     })
             }
         }
@@ -233,12 +237,12 @@ function addRole() {
 
 //  Add employee
 
-function addEmployee(){
+function addEmployee() {
 
     // for the selection of what role they are to have and who there manager is
     // Null is needed for if you happpen to be adding a manager
-    const managersList = ['NULL'];
-    const rolesList =[];
+    const managersList = [];
+    const rolesList = [];
 
     db.query(`SELECT * FROM employees`, function (err, results) {
         if (err) {
@@ -250,10 +254,10 @@ function addEmployee(){
                     name: `${result.first_names} ${result.last_names}`,
                     value: result.employee_id
                 });
-                
-                console.log(managersList);
-            }
 
+                
+            }
+console.log(managersList);
             db.query(`SELECT role_id, role_title FROM roles`, function (err, results) {
                 if (err) {
                     console.log('from role array list');
@@ -261,14 +265,14 @@ function addEmployee(){
                 } else {
                     for (const result of results) {
                         rolesList.push({
-                            name:result.role_title,
+                            name: result.role_title,
                             value: result.role_id
                         });
                     }
                     inquirer.prompt([
                         {
                             type: 'input',
-                            name:'first_name',
+                            name: 'first_name',
                             message: 'What is the employee\'s first name?'
                         },
                         {
@@ -289,18 +293,19 @@ function addEmployee(){
                             choices: managersList
                         }
                     ])
-                    .then((response) => {
-                        db.query(`INSERT INTO employees(first_names, last_names, role_id, manager_id) VALUES ('${response.first_name}', '${response.last_name}', '${response.jobTitle}', '${response.manager}')`, 
-                        function (err, results) {
-                            if (err) {
-                                console.error(err);
-                                console.log('Employee not added');
-                            } else {console.table(results);
-                                console.log(`${response.first_name} ${response.last_name} was added.`);
-                                start();
-                        }
+                        .then((response) => {
+                            db.query(`INSERT INTO employees(first_names, last_names, role_id, manager_id) VALUES ('${response.first_name}', '${response.last_name}', '${response.jobTitle}', '${response.manager}')`,
+                                function (err, results) {
+                                    if (err) {
+                                        console.error(err);
+                                        console.log('Employee not added');
+                                    } else {
+                                        console.table(results);
+                                        console.log(`${response.first_name} ${response.last_name} was added.`);
+                                        start();
+                                    }
+                                })
                         })
-                    })
                 }
             })
         }
@@ -308,7 +313,7 @@ function addEmployee(){
 };
 
 
-/*
+
 // For updating an employee
 
 function updateEmployee() {
@@ -321,19 +326,18 @@ function updateEmployee() {
             console.error(err);
         } else {
             for (let i in results)
-            employeesLists.push({
-                name: `${results[i].first_names} ${results[i].last_names}`,
-                value: results[i].employee_id
-            })
-            console.log(employeesLists);
+                employeesLists.push({
+                    name: `${results[i].first_names} ${results[i].last_names}`,
+                    value: results[i].employee_id
+                })
             db.query(`SELECT role_id, role_title FROM roles`, function (err, results) {
                 if (err) {
                     console.log('from role array list');
                     console.error(err);
                 } else {
                     for (let i in results) {
-                        rolesList.push({
-                            name:results[i].role_title,
+                        rolesLists.push({
+                            name: results[i].role_title,
                             value: results[i].role_id
                         })
                         inquirer.prompt([
@@ -350,10 +354,20 @@ function updateEmployee() {
                                 choices: rolesLists
                             }
                         ])
-                        .then((response) => {
-                            db.query(`UPDATE employees SET role`)
-                        })
-            })
-            )
+                            .then((response) => {
+                                db.query(`UPDATE employees SET role_id=${response.jobTitle} WHERE employee_id=${response.employee}`, function (err, results) {
+                                    if (err) {
+                                        console.error(err)
+                                    } else {
+                                        console.log(`${(employeesLists[response.employee - 1].name)} has been updated`);
+                                        start();
+                                    }
+                                }
+                                )
+                            })
+                    }
+                }}
+                )
+        }
+    })
 }
-*/
